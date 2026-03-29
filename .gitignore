@@ -1,0 +1,46 @@
+# Python artifacts
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Build artifacts
+dist/
+build/
+.coverage
+htmlcov/
+
+# All hidden directories (starts with .)
+.*/
+
+# Keep .gitignore and .github
+!.gitignore
+!.github/
+
+# Hidden files to ignore
+.DS_Store
+.coverage
+.env
+.run.sh
+.setup.sh
+.setup.bat
+.check_quality.py
+.mypy_cache/
+
+# Other files
+*.swp
+*.swo
+*.log
+*.bak
+
+# Local dev files
+demo_gradio.py
+run.sh
+.python-version
+
+# Virtual environments (non-hidden)
+env/
+venv/
+/.scripts/
+
+# Lock files (library, not application)
+uv.lock
