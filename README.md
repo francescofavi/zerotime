@@ -3,7 +3,7 @@
 [![CI](https://github.com/francescofavi/zerotime/actions/workflows/ci.yml/badge.svg)](https://github.com/francescofavi/zerotime/actions/workflows/ci.yml)
 [![PyPI version](https://img.shields.io/pypi/v/zerotime)](https://pypi.org/project/zerotime/)
 [![Python](https://img.shields.io/pypi/pyversions/zerotime)](https://pypi.org/project/zerotime/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A Python datetime rule engine for defining and working with recurring time patterns. Zerotime lets you express complex scheduling rules declaratively using a simple DSL (Domain-Specific Language), then query for matching datetimes, generate sequences, or combine rules using set operations.
 
