@@ -1,9 +1,13 @@
 # Zerotime
 
 [![CI](https://github.com/francescofavi/zerotime/actions/workflows/ci.yml/badge.svg)](https://github.com/francescofavi/zerotime/actions/workflows/ci.yml)
-[![PyPI version](https://img.shields.io/pypi/v/zerotime)](https://pypi.org/project/zerotime/)
-[![Python](https://img.shields.io/pypi/pyversions/zerotime)](https://pypi.org/project/zerotime/)
+[![PyPI version](https://img.shields.io/pypi/v/zerotime.svg)](https://pypi.org/project/zerotime/)
+[![Python](https://img.shields.io/pypi/pyversions/zerotime.svg)](https://pypi.org/project/zerotime/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Status](https://img.shields.io/pypi/status/zerotime.svg)](https://pypi.org/project/zerotime/)
+[![Typed](https://img.shields.io/badge/typed-yes-blue.svg)](https://peps.python.org/pep-0561/)
+[![Dependencies](https://img.shields.io/badge/dependencies-none-brightgreen.svg)](https://github.com/francescofavi/zerotime)
+[![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://docs.astral.sh/ruff/)
 
 A Python datetime rule engine for defining and working with recurring time patterns. Zerotime lets you express complex scheduling rules declaratively using a simple DSL (Domain-Specific Language), then query for matching datetimes, generate sequences, or combine rules using set operations.
 
@@ -221,13 +225,13 @@ python examples/01_basic_usage.py
 
 ## Further Documentation
 
-- [Full API Reference](docs/API_REFERENCE.md)
-- [Functional Analysis](docs/FUNCTIONAL_ANALYSIS.md)
-- [Architecture](docs/ARCHITECTURE.md)
-- [Anti-Patterns](docs/ANTI_PATTERNS.md)
-- [Development](docs/DEVELOPMENT.md)
-- [Examples README](examples/README.md)
+- [Full API Reference](https://github.com/francescofavi/zerotime/blob/main/docs/API_REFERENCE.md)
+- [Functional Analysis](https://github.com/francescofavi/zerotime/blob/main/docs/FUNCTIONAL_ANALYSIS.md)
+- [Architecture](https://github.com/francescofavi/zerotime/blob/main/docs/ARCHITECTURE.md)
+- [Anti-Patterns](https://github.com/francescofavi/zerotime/blob/main/docs/ANTI_PATTERNS.md)
+- [Development](https://github.com/francescofavi/zerotime/blob/main/docs/DEVELOPMENT.md)
+- [Examples README](https://github.com/francescofavi/zerotime/blob/main/examples/README.md)
 
 ## License
 
-[MIT License](LICENSE) - Copyright (c) 2025 Francesco Favi
+[MIT License](https://github.com/francescofavi/zerotime/blob/main/LICENSE) - Copyright (c) 2025 Francesco Favi
