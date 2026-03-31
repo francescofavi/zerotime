@@ -18,9 +18,9 @@ from zerotime.core import (
     set_global_config,
 )
 
-__version__ = "0.1.2"
+__version__ = "0.1.3"
 __author__ = "Francesco Favi"
-__email__ = "14098835+francescofavi@users.noreply.github.com"
+__email__ = "ffavidev@gmail.com"
 
 __all__ = [
     "Rule",
