@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/francescofavi/zerotime/main/logo.png" alt="Zerotime Logo" width="200">
+</p>
+
 # Zerotime
 
 [![CI](https://github.com/francescofavi/zerotime/actions/workflows/ci.yml/badge.svg)](https://github.com/francescofavi/zerotime/actions/workflows/ci.yml)
