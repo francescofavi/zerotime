@@ -75,6 +75,18 @@ dev = [
 testpaths = ["tests"]
 addopts = "-v"
 
+[tool.coverage.run]
+source = ["zerotime"]
+branch = true
+
+[tool.coverage.report]
+exclude_also = [
+    "@(abc\\.)?abstractmethod",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "pragma: no cover",
+]
+
 [tool.ruff]
 line-length = 100
 target-version = "py311"

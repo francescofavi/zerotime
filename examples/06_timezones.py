@@ -36,7 +36,7 @@ rome_rule = AtomicRule(
     hours="9",
     minutes="0",
     seconds="0",
-    timezone=rome_tz,
+    timezone=rome_tz,  # type: ignore[arg-type]  # public hint is timezone, runtime accepts any tzinfo
 )
 
 now_rome = datetime(2025, 6, 15, 8, 0, 0, tzinfo=rome_tz)
@@ -75,7 +75,7 @@ paris_rule = AtomicRule(
     hours="9",
     minutes="0",
     seconds="0",
-    timezone=paris,
+    timezone=paris,  # type: ignore[arg-type]
 )
 
 start = datetime(2025, 1, 6, tzinfo=paris)
@@ -102,7 +102,7 @@ rule_230am = AtomicRule(
     hours="2",
     minutes="30",
     seconds="0",
-    timezone=rome,
+    timezone=rome,  # type: ignore[arg-type]
 )
 
 # Try to generate - the non-existent time is automatically skipped
@@ -120,7 +120,7 @@ rule_230am_march = AtomicRule(
     hours="2",
     minutes="30",
     seconds="0",
-    timezone=rome,
+    timezone=rome,  # type: ignore[arg-type]
 )
 
 march_start = datetime(2025, 3, 1, tzinfo=rome)
@@ -143,7 +143,7 @@ rule_fall = AtomicRule(
     hours="2",
     minutes="30",
     seconds="0",
-    timezone=rome,
+    timezone=rome,  # type: ignore[arg-type]
 )
 
 oct_start = datetime(2025, 10, 26, 0, 0, 0, tzinfo=rome)

@@ -280,7 +280,8 @@ class DSLParser:
         result = included - excluded
 
         if not result:
-            if excluded and not included:
+            if excluded and not included:  # pragma: no cover
+                # Defensive: line 278 fills `included` when empty, so this branch is unreachable.
                 raise InvalidExpressionError(
                     f"Expression '{expression}' in {field_name} has only exclusions with no inclusions. "
                     f"Specify values to include, e.g., '1..{max_val},!7' instead of just '!7'"
@@ -648,7 +649,9 @@ class AtomicRule(Rule):
         # Resolve negative days
         days = set()
         for d in days_raw:
-            if d < _MIN_DAY:
+            if d < _MIN_DAY:  # pragma: no cover
+                # Defensive: _parse_days_expr always passes year+month, so DSLParser
+                # has already resolved negatives to positive day numbers (or raised).
                 last_day = _get_days_in_month(year=year, month=month)
                 actual_day = last_day + d + 1
                 if actual_day >= _MIN_DAY:
@@ -965,7 +968,9 @@ class AtomicRule(Rule):
                         raise ValueError(f"Timezone must start with 'UTC', got '{tz_str}'")
 
                     offset_str = tz_str[3:]  # Remove "UTC" prefix
-                    if not offset_str:
+                    if not offset_str:  # pragma: no cover
+                        # Defensive: tz_str == "UTC" hits the special case above,
+                        # so reaching here with empty offset is unreachable.
                         raise ValueError("Missing offset after 'UTC'")
 
                     # Parse sign
@@ -1119,7 +1124,7 @@ class CombinedRule(Rule):
 
         elif self._operator == "intersection":
             for left_batch in self._left.generate_batch(start, end):
-                if left_batch:
+                if left_batch:  # pragma: no branch
                     batch_start = left_batch[0]
                     batch_end = left_batch[-1]
                     right_matches = set(self._right.generate(batch_start, batch_end))
@@ -1127,9 +1132,9 @@ class CombinedRule(Rule):
                         if dt in right_matches:
                             yield dt
 
-        elif self._operator == "difference":
+        elif self._operator == "difference":  # pragma: no branch
             for left_batch in self._left.generate_batch(start, end):
-                if left_batch:
+                if left_batch:  # pragma: no branch
                     batch_start = left_batch[0]
                     batch_end = left_batch[-1]
                     right_matches = set(self._right.generate(batch_start, batch_end))
@@ -1170,17 +1175,17 @@ class CombinedRule(Rule):
             for dt in self._left.generate_reverse(start, end):
                 # Check if dt is in right rule (single point check)
                 for right_dt in self._right.generate(dt, dt):
-                    if right_dt == dt:
+                    if right_dt == dt:  # pragma: no branch
                         yield dt
                         break
 
-        elif self._operator == "difference":
+        elif self._operator == "difference":  # pragma: no branch
             # Iterate left in reverse, exclude if in right
             for dt in self._left.generate_reverse(start, end):
                 # Check if dt is NOT in right rule
                 found_in_right = False
                 for right_dt in self._right.generate(dt, dt):
-                    if right_dt == dt:
+                    if right_dt == dt:  # pragma: no branch
                         found_in_right = True
                         break
                 if not found_in_right:

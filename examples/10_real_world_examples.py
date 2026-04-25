@@ -44,7 +44,7 @@ def create_business_hours_calendar():
 
 def get_available_slots(rule: Rule, date: datetime, count: int = 5) -> list[datetime]:
     """Get next N available slots from a given date."""
-    slots = []
+    slots: list[datetime] = []
     current = date
     while len(slots) < count:
         try:
@@ -154,7 +154,7 @@ class ShiftScheduler:
     """Schedule different work shifts."""
 
     def __init__(self):
-        self.shifts = {}
+        self.shifts: dict[str, AtomicRule] = {}
 
     def add_shift(self, name: str, weekdays: str, start_hour: int, end_hour: int):
         """Add a shift definition."""
