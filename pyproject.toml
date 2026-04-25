@@ -43,6 +43,8 @@ exclude = [
     "/.idea/**",
     "/.mypy_cache/**",
     "/.mypy_cache",
+    "/.internal_docs/**",
+    "/.internal_docs",
     "/dist/**",
     "/.check_quality.py",
     "/.setup.bat",
