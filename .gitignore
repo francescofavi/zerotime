@@ -6,25 +6,16 @@ __pycache__/
 # Build artifacts
 dist/
 build/
-.coverage
 htmlcov/
 
-# All hidden directories (starts with .)
-.*/
+# Ignore everything starting with a dot (files, dirs, symlinks)
+.*
 
-# Keep .gitignore and .github
+# Keep tracked dotfiles / dotdirs
 !.gitignore
 !.github/
-
-# Hidden files to ignore
-.DS_Store
-.coverage
-.env
-.run.sh
-.setup.sh
-.setup.bat
-.check_quality.py
-.mypy_cache/
+!.pre-commit-config.yaml
+!.release-please-manifest.json
 
 # Other files
 *.swp
@@ -35,12 +26,10 @@ htmlcov/
 # Local dev files
 demo_gradio.py
 run.sh
-.python-version
 
 # Virtual environments (non-hidden)
 env/
 venv/
-/.scripts/
 
 # Lock files (library, not application)
 uv.lock
