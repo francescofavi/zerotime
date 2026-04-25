@@ -148,7 +148,7 @@ def _create_datetime_with_tz(
 # Returns: 0=Monday, 1=Tuesday, ..., 6=Sunday (same as datetime.weekday()).
 def _get_weekday(year: int, month: int, day: int) -> int:
     # For edge cases near minimum year, fall back to datetime to avoid year going to 0
-    if year <= 1 and month < _ZELLER_MONTH_ADJUSTMENT:
+    if year <= _MIN_YEAR and month < _ZELLER_MONTH_ADJUSTMENT:
         return _dt(year, month, day).weekday()
 
     if month < _ZELLER_MONTH_ADJUSTMENT:
@@ -417,7 +417,7 @@ class DSLParser:
                 return {offset}
             last_day = calendar.monthrange(year, month)[1]
             actual_day = last_day + offset + 1
-            if actual_day < 1:
+            if actual_day < _MIN_DAY:
                 raise InvalidExpressionError(
                     f"Negative day offset '{part}' (={actual_day}) is too large for "
                     f"{calendar.month_name[month]} which has only {last_day} days"
@@ -734,7 +734,7 @@ class AtomicRule(Rule):
 
                 # Get valid days for this month
                 days_in_month = _get_days_in_month(year=year, month=month)
-                valid_days = [d for d in fields.days if 1 <= d <= days_in_month]
+                valid_days = [d for d in fields.days if _MIN_DAY <= d <= days_in_month]
 
                 # Pre-compute time combinations
                 time_combos = [
@@ -799,7 +799,7 @@ class AtomicRule(Rule):
                     continue
 
                 days_in_month = _get_days_in_month(year=year, month=month)
-                valid_days = [d for d in fields.days if 1 <= d <= days_in_month]
+                valid_days = [d for d in fields.days if _MIN_DAY <= d <= days_in_month]
 
                 # Pre-compute time combinations in reverse order
                 time_combos = [
@@ -996,10 +996,12 @@ class AtomicRule(Rule):
                     minutes = int(parts[1])
 
                     # Validate ranges
-                    if not (0 <= hours <= 23):
-                        raise ValueError(f"Hours must be 0-23, got {hours}")
-                    if not (0 <= minutes <= 59):
-                        raise ValueError(f"Minutes must be 0-59, got {minutes}")
+                    if not (_MIN_HOUR <= hours <= _MAX_HOUR):
+                        raise ValueError(f"Hours must be {_MIN_HOUR}-{_MAX_HOUR}, got {hours}")
+                    if not (_MIN_MINUTE <= minutes <= _MAX_MINUTE):
+                        raise ValueError(
+                            f"Minutes must be {_MIN_MINUTE}-{_MAX_MINUTE}, got {minutes}"
+                        )
 
                     # Create timezone with offset
                     total_offset = timedelta(hours=sign * hours, minutes=sign * minutes)
