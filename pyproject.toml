@@ -109,6 +109,8 @@ ignore = [
 
 [tool.mypy]
 python_version = "3.11"
+mypy_path = "src"
+files = ["src/zerotime"]
 strict_optional = true
 warn_return_any = true
 warn_unused_configs = true
