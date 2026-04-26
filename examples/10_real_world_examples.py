@@ -8,9 +8,7 @@ from datetime import UTC, datetime, timedelta
 
 from zerotime import AtomicRule, Rule
 
-# =============================================================================
 # USE CASE 1: Business Hours Calendar
-# =============================================================================
 
 
 def create_business_hours_calendar():
@@ -68,9 +66,7 @@ for slot in get_available_slots(calendar, now, 5):
     print(f"  {slot.strftime('%A %H:%M')}")
 
 
-# =============================================================================
 # USE CASE 2: Recurring Billing System
-# =============================================================================
 
 
 class BillingSchedule:
@@ -145,9 +141,7 @@ for _name, schedule in schedules.items():
     print(f"  {schedule.name}: {next_date.strftime('%B %d, %Y')}")
 
 
-# =============================================================================
 # USE CASE 3: Shift Scheduling
-# =============================================================================
 
 
 class ShiftScheduler:
@@ -199,9 +193,7 @@ for name, start_time in scheduler.get_all_shifts_today(monday).items():
         print(f"  {name}: starts at {start_time.strftime('%H:%M')}")
 
 
-# =============================================================================
 # USE CASE 4: Reminder/Notification System
-# =============================================================================
 
 
 class Reminder:
@@ -281,9 +273,7 @@ for name, when, message in upcoming[:5]:
     print(f'    "{message}"')
 
 
-# =============================================================================
 # USE CASE 5: SLA/Deadline Calculator
-# =============================================================================
 
 
 class SLACalculator:
@@ -337,9 +327,7 @@ print(f"8-hour SLA deadline: {sla_deadline.strftime('%A %B %d, %H:%M')}")
 print("  (Skips weekend and lunch hours)")
 
 
-# =============================================================================
 # USE CASE 6: Maintenance Window Scheduler
-# =============================================================================
 
 
 class MaintenanceWindow:
@@ -406,9 +394,7 @@ if next_window:
     print(f"Next window: {next_window[0]} at {next_window[1].strftime('%A %B %d, %H:%M')}")
 
 
-# =============================================================================
 # USE CASE 7: Report Generation Schedule
-# =============================================================================
 
 print("\n" + "=" * 60)
 print("USE CASE 7: Report Generation Schedule")

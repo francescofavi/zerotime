@@ -12,9 +12,7 @@ from dataclasses import dataclass
 from datetime import UTC, timedelta, timezone
 from datetime import datetime as _dt
 
-# =====================================
 # CONSTANTS
-# =====================================
 
 # Field Range Constants - valid ranges for datetime components
 _MIN_MONTH = 1
@@ -62,9 +60,7 @@ _ZELLER_CENTURY_DIVISOR = 100
 _VALIDATION_YEAR = 2024
 
 
-# =====================================
 # EXCEPTIONS
-# =====================================
 
 
 class RecurrentError(Exception):
@@ -83,9 +79,7 @@ class NoMatchFoundError(RecurrentError):
     pass
 
 
-# =====================================
 # GENERAL UTILITIES
-# =====================================
 
 
 def _validate_datetime_bounds(dt: _dt) -> None:
@@ -171,9 +165,7 @@ def _calculate_search_boundary(base: _dt, target_year: int) -> _dt:
         return base.replace(year=target_year, month=3, day=1, hour=0, minute=0, second=0)
 
 
-# =====================================
 # DATA STRUCTURES
-# =====================================
 
 
 @dataclass
@@ -187,9 +179,7 @@ class ParsedFields:
     has_negative_days: bool = False
 
 
-# =====================================
 # CONFIGURATION
-# =====================================
 
 
 @dataclass
@@ -232,9 +222,7 @@ def reset_config() -> None:
     _CONFIG.set(RuleConfig())
 
 
-# =====================================
 # DSL PARSER (DOMAIN LOGIC)
-# =====================================
 
 
 # Parses DSL expressions into sets of integers.
@@ -427,9 +415,7 @@ class DSLParser:
             raise InvalidExpressionError(f"Invalid negative day '{part}' in {field_name}") from e
 
 
-# =====================================
 # CORE LIBRARY / PUBLIC API
-# =====================================
 
 
 class Rule(ABC):
