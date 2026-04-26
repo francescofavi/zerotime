@@ -31,7 +31,7 @@ from zerotime.core import (
 
 __version__ = "0.1.2"
 __author__ = "Francesco Favi"
-__email__ = "ffavidev@gmail.com"
+__email__ = "14098835+francescofavi@users.noreply.github.com"
 
 __all__ = [
     "Rule",

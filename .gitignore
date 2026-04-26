@@ -6,17 +6,27 @@ __pycache__/
 # Build artifacts
 dist/
 build/
+.coverage
 htmlcov/
 
-# Ignore everything starting with a dot (files, dirs, symlinks)
-.*
+# All hidden directories (starts with .)
+.*/
 
-# Keep tracked dotfiles / dotdirs
+# Symlinks to out-of-tree dev caches/venvs (not always matched by .*/)
+.mypy_cache
+.venv
+
+# Keep tracked dotfiles/dotdirs (maintainer-only — excluded from PyPI sdist via pyproject)
 !.gitignore
 !.github/
 !.internal_docs/
+!.python-version
 !.pre-commit-config.yaml
 !.release-please-manifest.json
+
+# Hidden files to ignore (genuinely local, never committed)
+.DS_Store
+.env
 
 # Other files
 *.swp
@@ -24,13 +34,12 @@ htmlcov/
 *.log
 *.bak
 
-# Local dev files
-demo_gradio.py
-run.sh
-
 # Virtual environments (non-hidden)
 env/
 venv/
 
-# Lock files (library, not application)
+# Library: uv.lock not committed (deterministic resolution is for apps, not libs)
 uv.lock
+
+# Local dev files
+demo_gradio.py
