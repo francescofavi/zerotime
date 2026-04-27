@@ -13,39 +13,37 @@
 [![Dependencies](https://img.shields.io/badge/dependencies-none-brightgreen.svg?cacheSeconds=0)]()
 [![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg?cacheSeconds=0)](https://docs.astral.sh/ruff/)
 
-A Python datetime rule engine for defining and working with recurring time patterns. Zerotime lets you express complex scheduling rules declaratively using a simple DSL, then query for matching datetimes, generate sequences, or combine rules using set operations.
+**Recurring datetime patterns as composable rules — declarative DSL, set algebra (union/intersection/difference), timezone-aware, JSON round-trip. Pure stdlib, zero runtime dependencies.**
 
----
+Zerotime treats *a recurring instant in time* as a first-class value: comparable, composable, serializable. You write rules with a small DSL ("every Monday at 9", "last day of the quarter", "business hours except lunch"), then ask the same rule for the next match, the previous match, a lazy sequence of matches, or its JSON form. It targets developers who need recurrence logic without pulling in a scheduling framework, a cron parser, or the full iCalendar RRULE surface.
 
-## Problem
+### Why Zerotime
 
-Working with recurring events in datetime is harder than it looks. "Every Monday at 9 AM", "the last business day of each quarter", "business hours except lunch" — each one is a small puzzle that ends up as ad-hoc calendar math sprinkled across the codebase. The standard library gives you `datetime` and `timedelta`; everything beyond that — leap years, varying month lengths, weekday alignment, DST gaps, last-day-of-month — is on you.
+- **Set algebra over time** — combine rules with `+` (union), `&` (intersection), and `-` (difference), nested arbitrarily.
+- **Compact DSL per field** — values, ranges, steps, lists, exclusions, and last-day-of-month negatives, one string per datetime field.
+- **One interface for atomic and combined rules** — `get_next`, `get_prev`, `generate`, `to_json` work the same regardless of how the rule was built.
+- **Memory-aware iteration** — `generate()` is lazy; `generate_batch()` handles bulk processing without loading everything in memory.
+- **Timezone-aware** — optional timezone binding, DST gap handling, and explicit naive/aware mismatch detection.
+- **JSON round-trip** for persistence, with size and depth caps.
+- **Zero runtime dependencies, PEP 561 typed, thread-safe** — standard library only, second-level resolution end-to-end.
 
-Existing libraries either model a different problem (cron expressions, parsed but not composable; iCalendar RRULE, powerful but verbose and tied to the iCal format) or are heavy and stateful (full scheduling frameworks). What is missing is a small, dependency-free abstraction that treats *a recurring instant in time* as a first-class value: comparable, composable, serializable.
+### How it works
 
-## Solution
+A rule answers one question: *"does this datetime match?"*. From that single predicate everything else derives — finding the next or previous match, generating sequences, combining rules with set operators. `AtomicRule` expresses temporal constraints field by field through the DSL (constraints AND together); `CombinedRule` joins two rules with a set operator. Both share the `Rule` base, so the API stays the same as you compose.
 
-Zerotime models recurring instants as **rules**. A rule answers one question: *"does this datetime match?"*. From that single predicate everything else derives — finding the next or previous match, generating sequences, combining rules with set operators.
+### When to use it
 
-Two rule kinds, one interface:
+- You need recurring datetime logic that is more expressive than `croniter` and lighter than `python-dateutil`'s RRULE.
+- You want to combine schedules with set operations (e.g. "business hours minus lunch", "Mondays except holidays").
+- You need to persist rules as JSON and reload them later.
+- You want timezone-aware recurrence with explicit DST gap handling.
+- You need to walk forward or backward from any reference instant, not just iterate from a fixed start.
 
-- `AtomicRule` — temporal constraints expressed in a string DSL, one constraint per datetime field. All constraints AND together.
-- `CombinedRule` — two rules joined by a set operator (`+` union, `&` intersection, `-` difference). Combinations nest freely.
+### When *not* to use it
 
-Both kinds share the `Rule` base, so any operation (`get_next`, `get_prev`, `generate`, `to_json`) works the same regardless of how the rule was built. The library has zero runtime dependencies, ships PEP 561 type information, and uses second-level resolution end-to-end.
-
-## What it gives you
-
-- **Declarative DSL** for each datetime field — values, ranges, steps, lists, exclusions, last-day-of-month negatives.
-- **Composable rules** via Python operators — `union + intersection & difference -`, with arbitrary nesting.
-- **Lazy generation** — `generate()` yields one datetime at a time, suitable for multi-year ranges.
-- **Batched generation** — `generate_batch()` for memory-efficient bulk processing.
-- **Temporal navigation** — `get_next()` / `get_prev()` find the nearest match in either direction.
-- **Immutable builders** — every `with_*` method returns a new rule; originals are never mutated.
-- **Timezone awareness** — optional timezone binding, DST gap handling, naive/aware mismatch detection.
-- **JSON round-trip** — `to_json()` / `from_json()` for persistence, with size and depth caps.
-- **Thread-safe** — parsed-field cache uses double-checked locking; configuration uses `ContextVar`.
-- **Zero runtime dependencies** — standard library only.
+- You need cron expression input — use `croniter`.
+- You need RFC 5545 RRULE compatibility — use `python-dateutil`.
+- You need sub-second resolution — Zerotime rounds to the second.
 
 ## Installation
 
