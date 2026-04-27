@@ -59,7 +59,7 @@ or
 uv add zerotime
 ```
 
-Requires Python 3.11+.
+Requires Python 3.12+.
 
 ## Quick start
 

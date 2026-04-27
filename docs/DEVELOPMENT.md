@@ -12,11 +12,11 @@ Covers the local development workflow. Does not cover API usage (see [API_REFERE
 
 ## Prerequisites
 
-- Python 3.11 or later.
+- Python 3.12 or later.
 - [`uv`](https://docs.astral.sh/uv/) — the project uses `uv` for environment, dependency, and run management. `pip` is not used.
 - `git`.
 
-The repo declares `requires-python = ">=3.11"`. CI runs the suite on 3.11, 3.12 and 3.13.
+The repo declares `requires-python = ">=3.12"`. CI runs the suite on 3.12, 3.13 and 3.14.
 
 ---
 
@@ -71,7 +71,7 @@ uv run vulture src/
 
 Tool configuration:
 
-- **ruff** — `[tool.ruff]` and `[tool.ruff.lint]` in `pyproject.toml`. Selected rule families: `E`, `F`, `W`, `I`, `N`, `UP`, `B`, `C4`, `SIM`. Line length 100. Target Python 3.11.
+- **ruff** — `[tool.ruff]` and `[tool.ruff.lint]` in `pyproject.toml`. Selected rule families: `E`, `F`, `W`, `I`, `N`, `UP`, `B`, `C4`, `SIM`. Line length 100. Target Python 3.12.
 - **mypy** — `[tool.mypy]` in `pyproject.toml`. Strict-optional, warn-return-any, warn-unreachable. `ignore_missing_imports = true` (project has no third-party runtime deps).
 - **bandit** — `[tool.bandit]` in `pyproject.toml`. Skips `B101`, `B403`, `B110`. Excludes `tests/`, `examples/`, `scripts/`.
 - **vulture** — `[tool.vulture]` in `pyproject.toml`. `min_confidence = 80`.
