@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.5](https://github.com/francescofavi/zerotime/compare/v0.1.4...v0.1.5) (2026-04-27)
+
+
+### Documentation
+
+* **README:** align tagline with the GitHub repo description ([#15](https://github.com/francescofavi/zerotime/issues/15)) ([885aa9c](https://github.com/francescofavi/zerotime/commit/885aa9c41de9680d3263282be471b5a4a19fd1e1))
+* **README:** standardize contributing policy ([#12](https://github.com/francescofavi/zerotime/issues/12)) ([b9e8a8c](https://github.com/francescofavi/zerotime/commit/b9e8a8ceff2d72c3d70c53d4ad8f215ef920a658))
+
 ## [0.1.4](https://github.com/francescofavi/zerotime/compare/v0.1.3...v0.1.4) (2026-04-28)
 
 
