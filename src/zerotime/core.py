@@ -12,9 +12,7 @@ from dataclasses import dataclass
 from datetime import UTC, timedelta, timezone
 from datetime import datetime as _dt
 
-# =====================================
 # CONSTANTS
-# =====================================
 
 # Field Range Constants - valid ranges for datetime components
 _MIN_MONTH = 1
@@ -62,9 +60,7 @@ _ZELLER_CENTURY_DIVISOR = 100
 _VALIDATION_YEAR = 2024
 
 
-# =====================================
 # EXCEPTIONS
-# =====================================
 
 
 class RecurrentError(Exception):
@@ -83,9 +79,7 @@ class NoMatchFoundError(RecurrentError):
     pass
 
 
-# =====================================
 # GENERAL UTILITIES
-# =====================================
 
 
 def _validate_datetime_bounds(dt: _dt) -> None:
@@ -148,7 +142,7 @@ def _create_datetime_with_tz(
 # Returns: 0=Monday, 1=Tuesday, ..., 6=Sunday (same as datetime.weekday()).
 def _get_weekday(year: int, month: int, day: int) -> int:
     # For edge cases near minimum year, fall back to datetime to avoid year going to 0
-    if year <= 1 and month < _ZELLER_MONTH_ADJUSTMENT:
+    if year <= _MIN_YEAR and month < _ZELLER_MONTH_ADJUSTMENT:
         return _dt(year, month, day).weekday()
 
     if month < _ZELLER_MONTH_ADJUSTMENT:
@@ -171,9 +165,7 @@ def _calculate_search_boundary(base: _dt, target_year: int) -> _dt:
         return base.replace(year=target_year, month=3, day=1, hour=0, minute=0, second=0)
 
 
-# =====================================
 # DATA STRUCTURES
-# =====================================
 
 
 @dataclass
@@ -187,9 +179,7 @@ class ParsedFields:
     has_negative_days: bool = False
 
 
-# =====================================
 # CONFIGURATION
-# =====================================
 
 
 @dataclass
@@ -232,9 +222,7 @@ def reset_config() -> None:
     _CONFIG.set(RuleConfig())
 
 
-# =====================================
 # DSL PARSER (DOMAIN LOGIC)
-# =====================================
 
 
 # Parses DSL expressions into sets of integers.
@@ -280,7 +268,8 @@ class DSLParser:
         result = included - excluded
 
         if not result:
-            if excluded and not included:
+            if excluded and not included:  # pragma: no cover
+                # Defensive: line 278 fills `included` when empty, so this branch is unreachable.
                 raise InvalidExpressionError(
                     f"Expression '{expression}' in {field_name} has only exclusions with no inclusions. "
                     f"Specify values to include, e.g., '1..{max_val},!7' instead of just '!7'"
@@ -416,7 +405,7 @@ class DSLParser:
                 return {offset}
             last_day = calendar.monthrange(year, month)[1]
             actual_day = last_day + offset + 1
-            if actual_day < 1:
+            if actual_day < _MIN_DAY:
                 raise InvalidExpressionError(
                     f"Negative day offset '{part}' (={actual_day}) is too large for "
                     f"{calendar.month_name[month]} which has only {last_day} days"
@@ -426,9 +415,7 @@ class DSLParser:
             raise InvalidExpressionError(f"Invalid negative day '{part}' in {field_name}") from e
 
 
-# =====================================
 # CORE LIBRARY / PUBLIC API
-# =====================================
 
 
 class Rule(ABC):
@@ -648,7 +635,9 @@ class AtomicRule(Rule):
         # Resolve negative days
         days = set()
         for d in days_raw:
-            if d < _MIN_DAY:
+            if d < _MIN_DAY:  # pragma: no cover
+                # Defensive: _parse_days_expr always passes year+month, so DSLParser
+                # has already resolved negatives to positive day numbers (or raised).
                 last_day = _get_days_in_month(year=year, month=month)
                 actual_day = last_day + d + 1
                 if actual_day >= _MIN_DAY:
@@ -731,7 +720,7 @@ class AtomicRule(Rule):
 
                 # Get valid days for this month
                 days_in_month = _get_days_in_month(year=year, month=month)
-                valid_days = [d for d in fields.days if 1 <= d <= days_in_month]
+                valid_days = [d for d in fields.days if _MIN_DAY <= d <= days_in_month]
 
                 # Pre-compute time combinations
                 time_combos = [
@@ -796,7 +785,7 @@ class AtomicRule(Rule):
                     continue
 
                 days_in_month = _get_days_in_month(year=year, month=month)
-                valid_days = [d for d in fields.days if 1 <= d <= days_in_month]
+                valid_days = [d for d in fields.days if _MIN_DAY <= d <= days_in_month]
 
                 # Pre-compute time combinations in reverse order
                 time_combos = [
@@ -965,7 +954,9 @@ class AtomicRule(Rule):
                         raise ValueError(f"Timezone must start with 'UTC', got '{tz_str}'")
 
                     offset_str = tz_str[3:]  # Remove "UTC" prefix
-                    if not offset_str:
+                    if not offset_str:  # pragma: no cover
+                        # Defensive: tz_str == "UTC" hits the special case above,
+                        # so reaching here with empty offset is unreachable.
                         raise ValueError("Missing offset after 'UTC'")
 
                     # Parse sign
@@ -991,10 +982,12 @@ class AtomicRule(Rule):
                     minutes = int(parts[1])
 
                     # Validate ranges
-                    if not (0 <= hours <= 23):
-                        raise ValueError(f"Hours must be 0-23, got {hours}")
-                    if not (0 <= minutes <= 59):
-                        raise ValueError(f"Minutes must be 0-59, got {minutes}")
+                    if not (_MIN_HOUR <= hours <= _MAX_HOUR):
+                        raise ValueError(f"Hours must be {_MIN_HOUR}-{_MAX_HOUR}, got {hours}")
+                    if not (_MIN_MINUTE <= minutes <= _MAX_MINUTE):
+                        raise ValueError(
+                            f"Minutes must be {_MIN_MINUTE}-{_MAX_MINUTE}, got {minutes}"
+                        )
 
                     # Create timezone with offset
                     total_offset = timedelta(hours=sign * hours, minutes=sign * minutes)
@@ -1119,7 +1112,7 @@ class CombinedRule(Rule):
 
         elif self._operator == "intersection":
             for left_batch in self._left.generate_batch(start, end):
-                if left_batch:
+                if left_batch:  # pragma: no branch
                     batch_start = left_batch[0]
                     batch_end = left_batch[-1]
                     right_matches = set(self._right.generate(batch_start, batch_end))
@@ -1127,9 +1120,9 @@ class CombinedRule(Rule):
                         if dt in right_matches:
                             yield dt
 
-        elif self._operator == "difference":
+        elif self._operator == "difference":  # pragma: no branch
             for left_batch in self._left.generate_batch(start, end):
-                if left_batch:
+                if left_batch:  # pragma: no branch
                     batch_start = left_batch[0]
                     batch_end = left_batch[-1]
                     right_matches = set(self._right.generate(batch_start, batch_end))
@@ -1170,17 +1163,17 @@ class CombinedRule(Rule):
             for dt in self._left.generate_reverse(start, end):
                 # Check if dt is in right rule (single point check)
                 for right_dt in self._right.generate(dt, dt):
-                    if right_dt == dt:
+                    if right_dt == dt:  # pragma: no branch
                         yield dt
                         break
 
-        elif self._operator == "difference":
+        elif self._operator == "difference":  # pragma: no branch
             # Iterate left in reverse, exclude if in right
             for dt in self._left.generate_reverse(start, end):
                 # Check if dt is NOT in right rule
                 found_in_right = False
                 for right_dt in self._right.generate(dt, dt):
-                    if right_dt == dt:
+                    if right_dt == dt:  # pragma: no branch
                         found_in_right = True
                         break
                 if not found_in_right:

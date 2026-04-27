@@ -4,183 +4,48 @@
 
 # Zerotime
 
-[![CI](https://github.com/francescofavi/zerotime/actions/workflows/ci.yml/badge.svg)](https://github.com/francescofavi/zerotime/actions/workflows/ci.yml)
-[![PyPI version](https://img.shields.io/pypi/v/zerotime.svg)](https://pypi.org/project/zerotime/)
-[![Python](https://img.shields.io/pypi/pyversions/zerotime.svg)](https://pypi.org/project/zerotime/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Status](https://img.shields.io/pypi/status/zerotime.svg)](https://pypi.org/project/zerotime/)
-[![Typed](https://img.shields.io/badge/typed-yes-blue.svg)](https://peps.python.org/pep-0561/)
-[![Dependencies](https://img.shields.io/badge/dependencies-none-brightgreen.svg)](https://github.com/francescofavi/zerotime)
-[![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://docs.astral.sh/ruff/)
+[![CI](https://img.shields.io/github/actions/workflow/status/francescofavi/zerotime/ci.yml?branch=main&label=CI&cacheSeconds=0)](https://github.com/francescofavi/zerotime/actions/workflows/ci.yml)
+[![PyPI version](https://img.shields.io/pypi/v/zerotime.svg?cacheSeconds=0)](https://pypi.org/project/zerotime/)
+[![Python versions](https://img.shields.io/pypi/pyversions/zerotime.svg?cacheSeconds=0)](https://pypi.org/project/zerotime/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?cacheSeconds=0)](https://github.com/francescofavi/zerotime/blob/main/LICENSE)
+[![Status](https://img.shields.io/pypi/status/zerotime.svg?cacheSeconds=0)](https://pypi.org/project/zerotime/)
+[![Typed](https://img.shields.io/badge/typed-PEP%20561-blue.svg?cacheSeconds=0)](https://peps.python.org/pep-0561/)
+[![Dependencies](https://img.shields.io/badge/dependencies-none-brightgreen.svg?cacheSeconds=0)]()
+[![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg?cacheSeconds=0)](https://docs.astral.sh/ruff/)
 
-A Python datetime rule engine for defining and working with recurring time patterns. Zerotime lets you express complex scheduling rules declaratively using a simple DSL (Domain-Specific Language), then query for matching datetimes, generate sequences, or combine rules using set operations.
+A Python datetime rule engine for defining and working with recurring time patterns. Zerotime lets you express complex scheduling rules declaratively using a simple DSL, then query for matching datetimes, generate sequences, or combine rules using set operations.
 
-## Why Zerotime?
+---
 
-Working with recurring events in datetime is surprisingly complex. You might need "every Monday at 9 AM", "the last day of each month", or "business hours except lunch break". Traditional approaches involve writing custom logic for each pattern, handling edge cases like leap years, varying month lengths, and weekday calculations.
+## Problem
 
-Zerotime solves this by providing a unified `Rule` abstraction. Rules can be atomic (based on month, day, hour constraints) or combined using operators (`+` for union, `&` for intersection, `-` for difference). The library handles all the complexity of calendar math internally, provides memory-efficient generation of large date ranges, and includes JSON serialization for persistence.
+Working with recurring events in datetime is harder than it looks. "Every Monday at 9 AM", "the last business day of each quarter", "business hours except lunch" — each one is a small puzzle that ends up as ad-hoc calendar math sprinkled across the codebase. The standard library gives you `datetime` and `timedelta`; everything beyond that — leap years, varying month lengths, weekday alignment, DST gaps, last-day-of-month — is on you.
 
-## Technical Design
+Existing libraries either model a different problem (cron expressions, parsed but not composable; iCalendar RRULE, powerful but verbose and tied to the iCal format) or are heavy and stateful (full scheduling frameworks). What is missing is a small, dependency-free abstraction that treats *a recurring instant in time* as a first-class value: comparable, composable, serializable.
 
-Zerotime uses **only the Python standard library** (no external dependencies). The core design principles:
+## Solution
 
-- **Declarative DSL**: Each temporal field (months, days, weekdays, hours, minutes, seconds) accepts string expressions like `"1..5"` (range), `"/15"` (step), `"1,15,-1"` (list with last-day), or `"1..12,!7,!8"` (exclusions)
-- **Composable Rules**: Rules combine via Python operators, enabling complex schedules from simple building blocks
-- **Lazy Generation**: The `generate()` method yields datetimes on demand, suitable for large date ranges
-- **Immutable Rules**: All `with_*` methods return new rule instances; original rules are never modified
-- **Timezone Support**: Rules optionally bind to a timezone, with proper DST handling and validation of timezone-aware vs naive datetimes
-- **Thread Safety**: Parsed expressions are cached with double-checked locking for safe concurrent use
+Zerotime models recurring instants as **rules**. A rule answers one question: *"does this datetime match?"*. From that single predicate everything else derives — finding the next or previous match, generating sequences, combining rules with set operators.
 
-## Components Overview
+Two rule kinds, one interface:
 
-The library consists of three main components:
+- `AtomicRule` — temporal constraints expressed in a string DSL, one constraint per datetime field. All constraints AND together.
+- `CombinedRule` — two rules joined by a set operator (`+` union, `&` intersection, `-` difference). Combinations nest freely.
 
-- **AtomicRule**: The fundamental building block. Defines temporal constraints using DSL expressions for each datetime field. All constraints must match (AND logic).
+Both kinds share the `Rule` base, so any operation (`get_next`, `get_prev`, `generate`, `to_json`) works the same regardless of how the rule was built. The library has zero runtime dependencies, ships PEP 561 type information, and uses second-level resolution end-to-end.
 
-- **CombinedRule**: Created by combining two rules with an operator. Supports union (either matches), intersection (both match), and difference (first matches but not second).
+## What it gives you
 
-- **RuleConfig**: Global configuration controlling search limits, generation caps, JSON size limits, and batch sizes for memory-efficient processing.
-
-## Usage Example
-
-Here's a realistic example showing how to define business working hours excluding lunch breaks and holidays:
-
-```python
-from datetime import datetime, UTC
-from zerotime import AtomicRule
-
-# Business hours: weekdays 9-17, on the hour
-business_hours = AtomicRule(
-    weekdays="1..5",        # Monday to Friday
-    hours="9..17",          # 9 AM to 5 PM
-    minutes="0",            # On the hour
-    seconds="0",
-    timezone=UTC
-)
-
-# Lunch break: 12-13
-lunch_break = AtomicRule(
-    weekdays="1..5",
-    hours="12,13",
-    minutes="0",
-    seconds="0",
-    timezone=UTC
-)
-
-# Working hours = business hours minus lunch
-working_hours = business_hours - lunch_break
-
-# Find the next working hour from now
-now = datetime(2025, 1, 15, 10, 30, 0, tzinfo=UTC)
-next_slot = working_hours.get_next(now)
-print(f"Next working hour: {next_slot}")  # 2025-01-15 11:00:00+00:00
-
-# Generate all working hours for a day
-start = datetime(2025, 1, 15, 0, 0, 0, tzinfo=UTC)
-end = datetime(2025, 1, 15, 23, 59, 59, tzinfo=UTC)
-for dt in working_hours.generate(start, end):
-    print(dt)
-# Output: 09:00, 10:00, 11:00, 14:00, 15:00, 16:00, 17:00
-
-# Serialize for storage
-json_str = working_hours.to_json()
-
-# Restore later
-from zerotime import Rule
-restored = Rule.from_json(json_str)
-```
-
-## Main APIs
-
-### AtomicRule
-
-Creates rules from temporal constraints. Each field uses DSL syntax.
-
-**Simple usage** - every day at noon:
-```python
-rule = AtomicRule(hours="12", minutes="0", seconds="0")
-```
-
-**Complex usage** - quarterly reports on the last business day:
-```python
-rule = AtomicRule(
-    months="3,6,9,12",      # End of quarter
-    days="-1,-2,-3",        # Last 3 days (will pick based on weekday)
-    weekdays="1..5",        # Must be a weekday
-    hours="17",
-    minutes="0",
-    seconds="0"
-)
-```
-
-### Rule Operators
-
-Combine rules using Python operators:
-
-```python
-# Union: matches if either rule matches
-holidays = rule1 + rule2
-
-# Intersection: matches only if both rules match
-overlap = rule1 & rule2
-
-# Difference: matches first rule but not second
-working_days = all_days - holidays
-```
-
-### Temporal Navigation
-
-Find next/previous matching datetime:
-
-```python
-# Simple - find next match
-next_match = rule.get_next(datetime.now())
-
-# Complex - search up to 10 years ahead
-next_match = rule.get_next(base_date, max_years=10)
-```
-
-### Generation
-
-Generate all matching datetimes in a range:
-
-```python
-# Simple - iterate all matches
-for dt in rule.generate(start, end):
-    process(dt)
-
-# Memory-efficient - process in batches
-for batch in rule.generate_batch(start, end, batch_size=1000):
-    bulk_process(batch)
-```
-
-### Configuration
-
-Adjust global limits:
-
-```python
-from zerotime import RuleConfig, set_global_config
-
-config = RuleConfig(
-    max_years_search=10,        # How far to search in get_next/get_prev
-    max_generate_items=100000,  # Cap on generated items (None = unlimited)
-    default_batch_size=5000     # Batch size for generate_batch
-)
-set_global_config(config)
-```
-
-## DSL Syntax Reference
-
-| Syntax | Meaning | Example |
-|--------|---------|---------|
-| `"N"` | Single value | `"15"` - day 15 |
-| `"N..M"` | Range (inclusive) | `"1..5"` - Mon-Fri |
-| `"N..M/S"` | Range with step | `"0..59/15"` - 0,15,30,45 |
-| `"/S"` | Global step (multiples of S) | `"/15"` - 0,15,30,45 for minutes |
-| `"A,B,C"` | List | `"1,15,-1"` - 1st, 15th, last |
-| `"!N"` | Exclusion | `"1..12,!7,!8"` - all except Jul,Aug |
-| `"-N"` | Negative (days only) | `"-1"` - last day of month |
+- **Declarative DSL** for each datetime field — values, ranges, steps, lists, exclusions, last-day-of-month negatives.
+- **Composable rules** via Python operators — `union + intersection & difference -`, with arbitrary nesting.
+- **Lazy generation** — `generate()` yields one datetime at a time, suitable for multi-year ranges.
+- **Batched generation** — `generate_batch()` for memory-efficient bulk processing.
+- **Temporal navigation** — `get_next()` / `get_prev()` find the nearest match in either direction.
+- **Immutable builders** — every `with_*` method returns a new rule; originals are never mutated.
+- **Timezone awareness** — optional timezone binding, DST gap handling, naive/aware mismatch detection.
+- **JSON round-trip** — `to_json()` / `from_json()` for persistence, with size and depth caps.
+- **Thread-safe** — parsed-field cache uses double-checked locking; configuration uses `ContextVar`.
+- **Zero runtime dependencies** — standard library only.
 
 ## Installation
 
@@ -188,11 +53,118 @@ set_global_config(config)
 pip install zerotime
 ```
 
-**Requirements:**
-- Python 3.11+
-- No external dependencies (standard library only)
+or
 
-## Running Tests
+```bash
+uv add zerotime
+```
+
+Requires Python 3.12+.
+
+## Quick start
+
+```python
+from datetime import datetime, UTC
+from zerotime import AtomicRule
+
+# Business hours: weekdays, 09:00-17:00 on the hour
+business_hours = AtomicRule(
+    weekdays="1..5",
+    hours="9..17",
+    minutes="0",
+    seconds="0",
+    timezone=UTC,
+)
+
+# Lunch break: 12:00 and 13:00
+lunch_break = AtomicRule(
+    weekdays="1..5",
+    hours="12,13",
+    minutes="0",
+    seconds="0",
+    timezone=UTC,
+)
+
+# Working hours = business hours minus lunch
+working_hours = business_hours - lunch_break
+
+# Find the next working hour after a reference instant
+ref = datetime(2025, 1, 15, 10, 30, 0, tzinfo=UTC)
+print(working_hours.get_next(ref))
+# 2025-01-15 11:00:00+00:00
+
+# Generate every working hour for a single day
+day_start = datetime(2025, 1, 15, 0, 0, 0, tzinfo=UTC)
+day_end = datetime(2025, 1, 15, 23, 59, 59, tzinfo=UTC)
+for dt in working_hours.generate(day_start, day_end):
+    print(dt.strftime("%H:%M"))
+# 09:00, 10:00, 11:00, 14:00, 15:00, 16:00, 17:00
+
+# Persist and restore
+from zerotime import Rule
+restored = Rule.from_json(working_hours.to_json())
+```
+
+## DSL syntax
+
+Each `AtomicRule` field accepts a string expression:
+
+| Syntax | Meaning | Example |
+|--------|---------|---------|
+| `"N"` | Single value | `"15"` — day 15 |
+| `"N..M"` | Inclusive range | `"1..5"` — Mon to Fri |
+| `"N..M/S"` | Range with step | `"0..59/15"` — 0, 15, 30, 45 |
+| `"/S"` | Global step | `"/15"` for minutes — 0, 15, 30, 45 |
+| `"A,B,C"` | List | `"1,15,-1"` — 1st, 15th, last day |
+| `"!N"` | Exclusion | `"1..12,!7,!8"` — all months except July and August |
+| `"-N"` | Negative day | `"-1"` — last day of month (days field only) |
+
+Field ranges: `months 1-12`, `days 1-31` (or `-1..-31`), `weekdays 1-7` (Mon=1), `hours 0-23`, `minutes 0-59`, `seconds 0-59`.
+
+## Comparison with alternatives
+
+| Capability | Zerotime | `croniter` | `python-dateutil` (`rrule`) | `recurrent` |
+|---|---|---|---|---|
+| Pure-Python, stdlib only | yes | yes | no (`six`) | depends on dateutil |
+| Set-operator composition (`+ & -`) | yes | no | no | no |
+| Negative day-of-month (`-1` = last) | yes | no | partial (`bymonthday=-1`) | no |
+| DSL exclusions (`!7`) | yes | no | no | no |
+| Last-day / quarterly patterns out of the box | yes | manual | manual | partial |
+| JSON round-trip | yes | no | no | no |
+| Timezone-aware with DST gap handling | yes | partial | yes | partial |
+| Sub-second resolution | no | no | yes | no |
+| iCalendar RFC 5545 conformance | no | no | yes | partial |
+| Cron-expression input | no | yes | no | no |
+
+If you need cron expressions, use `croniter`. If you need RFC 5545 RRULE compatibility, use `python-dateutil`. Zerotime targets the gap in the middle: a small, composable, stdlib-only rule abstraction with set algebra.
+
+## Known limits and open issues
+
+A small library deliberately solves a small problem. The list below sets expectations up front.
+
+- *limit:* second-level resolution; microseconds are ignored during matching.
+- *limit:* year range bounded to `[1, 9999]`; outside that range, methods raise `ValueError`.
+- *limit:* negative-day syntax is valid only in the `days` field.
+- *limit:* JSON timezone round-trip preserves UTC offsets, not IANA zone names — DST-aware behavior may differ after deserialization.
+- *design:* combining a tz-aware rule with a tz-naive rule is rejected at construction time (`InvalidRuleError`); no implicit promotion.
+- *design:* `get_next`/`get_prev` search a bounded number of years (default 5) — set `max_years_search` higher when needed.
+- *design:* `generate()` over very large ranges with no `max_generate_items` cap can produce unbounded output; use `generate_batch()` or set a cap.
+- *open:* the library version in `src/zerotime/__init__.py` may lead the published `CHANGELOG.md` between releases.
+
+## Anti-patterns — how NOT to use this project
+
+A short cheat sheet of usages the library does not support; expanded examples live in [`docs/ANTI_PATTERNS.md`](https://github.com/francescofavi/zerotime/blob/main/docs/ANTI_PATTERNS.md).
+
+- Do not pass a naive datetime to a rule that has a timezone — it raises `ValueError`.
+- Do not combine a tz-aware rule with a tz-naive rule — it raises `InvalidRuleError`.
+- Do not call `generate()` over multi-year ranges on a high-frequency rule without a cap or batches.
+- Do not write a DSL expression that excludes every value in the field — it raises `InvalidExpressionError`.
+- Do not use negative values (`"-1"`) outside the `days` field — only `days` accepts them.
+- Do not mutate `_*_expr` attributes directly — use `with_*` builder methods.
+- Do not assume IANA zone fidelity across `to_json`/`from_json` — only UTC offsets round-trip.
+- Do not expect sub-second matching — Zerotime rounds to the second.
+
+## Running tests
 
 ```bash
 uv run pytest
@@ -204,22 +176,22 @@ With coverage:
 uv run pytest --cov=zerotime --cov-report=term-missing
 ```
 
-## Examples
+## Running examples
 
-The `examples/` directory contains comprehensive, runnable examples covering all features:
+The `examples/` directory ships ten standalone scripts covering every public feature:
 
 | File | Description |
-|------|-------------|
-| `01_basic_usage.py` | Introduction to AtomicRule, get_next, get_prev |
-| `02_dsl_syntax.py` | Complete DSL reference with all syntax patterns |
-| `03_rule_combination.py` | Combining rules with +, &, - operators |
-| `04_generation_methods.py` | generate(), generate_reverse(), generate_batch() |
+|---|---|
+| `01_basic_usage.py` | `AtomicRule`, `get_next`, `get_prev` |
+| `02_dsl_syntax.py` | Every DSL form with one example each |
+| `03_rule_combination.py` | `+`, `&`, `-` operators |
+| `04_generation_methods.py` | `generate()`, `generate_reverse()`, `generate_batch()` |
 | `05_navigation.py` | Temporal navigation and error handling |
-| `06_timezones.py` | Timezone handling including DST transitions |
-| `07_configuration.py` | RuleConfig and global settings |
-| `08_json_serialization.py` | Saving and restoring rules with JSON |
-| `09_builder_methods.py` | Immutable rule modification with with_* methods |
-| `10_real_world_examples.py` | Practical use cases: billing, scheduling, SLA, maintenance windows |
+| `06_timezones.py` | Timezone-aware rules and DST handling |
+| `07_configuration.py` | `RuleConfig` and global settings |
+| `08_json_serialization.py` | `to_json` / `from_json` round-trip |
+| `09_builder_methods.py` | Immutable `with_*` builders |
+| `10_real_world_examples.py` | Billing, scheduling, SLA, maintenance windows |
 
 Run any example directly:
 
@@ -227,15 +199,28 @@ Run any example directly:
 python examples/01_basic_usage.py
 ```
 
-## Further Documentation
+## Development
 
-- [Full API Reference](https://github.com/francescofavi/zerotime/blob/main/docs/API_REFERENCE.md)
-- [Functional Analysis](https://github.com/francescofavi/zerotime/blob/main/docs/FUNCTIONAL_ANALYSIS.md)
-- [Architecture](https://github.com/francescofavi/zerotime/blob/main/docs/ARCHITECTURE.md)
-- [Anti-Patterns](https://github.com/francescofavi/zerotime/blob/main/docs/ANTI_PATTERNS.md)
-- [Development](https://github.com/francescofavi/zerotime/blob/main/docs/DEVELOPMENT.md)
-- [Examples README](https://github.com/francescofavi/zerotime/blob/main/examples/README.md)
+Contributor setup, quality pipeline, pre-commit hooks and release process live in [`docs/DEVELOPMENT.md`](https://github.com/francescofavi/zerotime/blob/main/docs/DEVELOPMENT.md).
+
+## Documentation map
+
+User documentation:
+
+- [`README.md`](https://github.com/francescofavi/zerotime/blob/main/README.md) — this file.
+- [`docs/ANTI_PATTERNS.md`](https://github.com/francescofavi/zerotime/blob/main/docs/ANTI_PATTERNS.md) — how NOT to use the library, with worked examples.
+
+Developer documentation:
+
+- [`docs/API_REFERENCE.md`](https://github.com/francescofavi/zerotime/blob/main/docs/API_REFERENCE.md) — every public symbol, verbatim signatures, parameters, raises.
+- [`docs/ARCHITECTURE.md`](https://github.com/francescofavi/zerotime/blob/main/docs/ARCHITECTURE.md) — component map, data flow, design decisions.
+- [`docs/DEVELOPMENT.md`](https://github.com/francescofavi/zerotime/blob/main/docs/DEVELOPMENT.md) — local setup, test/quality pipeline, commit conventions, release process.
+- [`examples/README.md`](https://github.com/francescofavi/zerotime/blob/main/examples/README.md) — runnable examples index.
+
+## Contributing
+
+Zerotime is a personal portfolio project. Issues and discussions are welcome; pull requests may not be accepted in order to keep the design surface intentional. If you have a use case the library does not support, open an issue describing the scenario rather than sending a patch — that way the conversation about scope happens before the code.
 
 ## License
 
-[MIT License](https://github.com/francescofavi/zerotime/blob/main/LICENSE) - Copyright (c) 2025 Francesco Favi
+[MIT License](https://github.com/francescofavi/zerotime/blob/main/LICENSE) — Copyright (c) 2025 Francesco Favi.
