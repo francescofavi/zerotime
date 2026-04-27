@@ -217,7 +217,9 @@ Developer documentation:
 
 ## Contributing
 
-Zerotime is a personal portfolio project. Issues and discussions are welcome; pull requests may not be accepted in order to keep the design surface intentional. If you have a use case the library does not support, open an issue describing the scenario rather than sending a patch — that way the conversation about scope happens before the code.
+This repository is maintained as a personal portfolio project. Pull requests are generally not accepted, but exceptional contributions may be considered.
+
+For bug reports and feature requests, please use [GitHub Issues](https://github.com/francescofavi/zerotime/issues).
 
 ## License
 
